@@ -1,0 +1,6 @@
+target/**
+compiler/target/**
+compiler/project/target/**
+compiler/.idea/**
+**.DS_Store**
+.idea/**
