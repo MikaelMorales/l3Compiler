@@ -1,0 +1,13 @@
+#+OPTIONS: toc:nil author:nil
+#+TITLE: L₃ examples
+
+This directory contains several example programs written in L₃. The most important ones are briefly described in the table below.
+
+| Name    | Behavior                                                  |
+|---------+-----------------------------------------------------------|
+| bignums | Compute the factorial using "big integers"                |
+| maze    | Inefficiently compute and draw a random maze              |
+| unimaze | Like maze, but more efficient and uses Unicode characters |
+| queens  | Solve the n-queens problem                                |
+| sudoku  | Solve a few Sudoku problems                               |
+|---------+-----------------------------------------------------------|
