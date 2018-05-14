@@ -13,7 +13,6 @@ static uvalue_t* free_boundary = NULL;
 #define HEADER_SIZE 1
 
 // Header management
-
 static uvalue_t header_pack(tag_t tag, uvalue_t size) {
   return (size << 8) | (uvalue_t)tag;
 }

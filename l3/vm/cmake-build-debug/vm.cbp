@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="vm"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="vm">
+				<Option output="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/vm" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/Mikael/Documents/l3Compiler/l3/vm/src"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 vm"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="vm/fast">
+				<Option output="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/vm" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/Mikael/Documents/l3Compiler/l3/vm/src"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 vm/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Mikael/Documents/l3Compiler/l3/vm/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/Makefile">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/README.org">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/bin/vm">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/bin/vm.dSYM/Contents/Info.plist">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/bin/vm.dSYM/Contents/Resources/DWARF/vm">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/engine.c">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/engine.h">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/fail.c">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/fail.h">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/main.c">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/memory.h">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/memory_mark_n_sweep.c">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/memory_nofree.c">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/opcode.h">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/vmtypes.h">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/bignums.asm">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/maze.asm">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/queens.asm">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/unimaze.asm">
+			<Option target="vm"/>
+		</Unit>
+		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

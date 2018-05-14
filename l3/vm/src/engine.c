@@ -297,6 +297,7 @@ uvalue_t engine_run() {
  l_BGET: {
     uvalue_t* block = addr_v_to_p(Rb);
     uvalue_t index = Rc;
+    //fprintf(stderr, "Block get: %p\n", block-1);
     assert(index < memory_get_block_size(block));
     Ra = block[index];
     pc += 1;
