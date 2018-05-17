@@ -64,7 +64,7 @@ bool is_valid_size_block(const uvalue_t block, const uvalue_t size) {
   if (header_unpack_size(block) == size) {
     return true;
   }
-  return header_unpack_size(block) > size + HEADER_SIZE;
+  return header_unpack_size(block) > size + HEADER_SIZE; // If splitting might be necessary
 }
 
 /**
@@ -95,10 +95,11 @@ uvalue_t* find_free_block(const uvalue_t size) {
 
   // Set next virtual address, if need to split, create the split
   if (block_size != size) {
-    uvalue_t* phy_addr = current_pointer + size;
+    uvalue_t* phy_addr = current_pointer + size + HEADER_SIZE;
     next_addr = addr_p_to_v(phy_addr);
-    *phy_addr = header_pack(tag_None, block_size - size);
-    assert(block_size-size >= 2);
+    *phy_addr = header_pack(tag_None, block_size - size - HEADER_SIZE);
+
+    assert((block_size - size - HEADER_SIZE) >= 1);
 
     // Update next pointer
     *(phy_addr + HEADER_SIZE) = *(current_pointer + HEADER_SIZE);
@@ -157,10 +158,10 @@ bool is_valid_block_pointer(uvalue_t* block) {
 
 void mark(uvalue_t* ptr) {
   ptr = ptr - HEADER_SIZE;
-  if (heap_start <= ptr && ptr < memory_end && is_valid_block_pointer(ptr)) {
+  if (is_valid_block_pointer(ptr)) {
     uvalue_t size = header_unpack_size(*ptr);
     unset_block_bitmap(ptr);
-    for(size_t i = 1; i < size; i++) {
+    for(size_t i = 1; i <= size; i++) {
       uvalue_t child = ptr[i];
 
       // Block addresses should be byte aligned
@@ -174,7 +175,7 @@ void mark(uvalue_t* ptr) {
 bool are_consecutive_blocks(const uvalue_t* b1, const uvalue_t* b2) {
   assert(b1 < b2);
   uvalue_t size = header_unpack_size(*b1);
-  return b1 + size == b2;
+  return b1 + size + HEADER_SIZE == b2;
 }
 
 void sweep() {
@@ -187,12 +188,12 @@ void sweep() {
     //fprintf(stderr, "Curr: %p \n", curr);
     //fprintf(stderr, "Prev: %p \n", prev);
     assert(curr >= heap_start && curr < memory_end);
-    if(is_valid_block_pointer(curr) || header_unpack_tag(*curr) == tag_None) { // added none tag
+    if(is_valid_block_pointer(curr) || header_unpack_tag(*curr) == tag_None) {
       uvalue_t sizeCurr = header_unpack_size(*curr);
       // Coalescing
       if (prev != NULL && are_consecutive_blocks(prev, curr)) {
         uvalue_t sizePrev = header_unpack_size(*prev);
-        *prev = header_pack(tag_None, sizePrev + sizeCurr);
+        *prev = header_pack(tag_None, sizePrev + sizeCurr + HEADER_SIZE);
       } else {
         if (free_list == NULL) {
           free_list = curr;
@@ -203,7 +204,7 @@ void sweep() {
 
         prev = curr;
         *curr = header_pack(tag_None, sizeCurr);
-        *(curr + HEADER_SIZE) = NULL;
+        *(curr + HEADER_SIZE) = NULL; // Might not be necessary
       }
       unset_block_bitmap(curr);
     } else {
@@ -213,7 +214,7 @@ void sweep() {
     // Update curr pointer
     uvalue_t size = header_unpack_size(*curr);
     //fprintf(stderr, "Size: %u \n", size);
-    curr += size;
+    curr += size + HEADER_SIZE;
   }
 }
 
@@ -240,7 +241,7 @@ void bitmap_allocation(size_t heap_size) {
   bitmap_start = heap_start;
   heap_start = heap_start + bitmap_size;
   free_list = heap_start;
-  *free_list = header_pack(tag_None, (uvalue_t)(memory_end-heap_start));
+  *free_list = header_pack(tag_None, (uvalue_t)(memory_end-heap_start-HEADER_SIZE));
   assert(free_list != NULL);
   memset(bitmap_start, 0, bitmap_size);
 }
@@ -262,31 +263,31 @@ void printHeap() {
   while (curr < memory_end) {
     uvalue_t sizeCurr = header_unpack_size(*curr);
     fprintf(stderr, "Block of size: %u at %p\n", sizeCurr, curr);
-    curr += sizeCurr;
+    curr += sizeCurr + HEADER_SIZE;
   }
 }
 
 uvalue_t* memory_allocate(tag_t tag, uvalue_t size) {
   assert(heap_start != NULL);
-  size = size != 0 ? size : 1;
-  const uvalue_t total_size = size + HEADER_SIZE;
 
-  uvalue_t* freeBlock = find_free_block(total_size);
+  const uvalue_t block_size = size != 0 ? size : 1;
+
+  uvalue_t* freeBlock = find_free_block(block_size);
   if (freeBlock == NULL) {
+    //fprintf(stderr, "GcCOLLECT\n");
     //printHeap();
     //fprintf(stderr, "End: %p", memory_end);
     gc_collect();
-    freeBlock = find_free_block(total_size);
+    freeBlock = find_free_block(block_size);
     if (freeBlock == NULL) {
       fail("Mark and Sweep failed !");
     }
   }
 
-  assert(total_size >= 2);
-  *freeBlock = header_pack(tag, total_size);
+  *freeBlock = header_pack(tag, block_size);
   set_block_bitmap(freeBlock);
   uvalue_t* res = freeBlock + HEADER_SIZE;
-  //fprintf(stderr, "Block of size: %u at %p\n", total_size, freeBlock);
+  //fprintf(stderr, "Returned block at: %p\n", freeBlock);
 
   return res;
 }
