@@ -24,7 +24,7 @@ static void* addr_v_to_p(uvalue_t v_addr) {
 }
 
 static uvalue_t addr_p_to_v(uvalue_t* p_addr) {
-    assert(memory_start <= p_addr && p_addr <= memory_end);
+    assert(memory_start <= p_addr && p_addr <= memory_end); // TODO: memory_end ???
     return (uvalue_t)((char*)p_addr - (char*)memory_start);
 }
 
@@ -45,6 +45,27 @@ char* memory_get_identity() {
   return "GC: Mark and Sweep";
 }
 
+void printHeap() {
+  fprintf(stderr, "***********************HEAP STATUS***************************\n");
+  uvalue_t* curr = heap_start;
+  while (curr < memory_end) {
+    uvalue_t sizeCurr = header_unpack_size(*curr);
+    fprintf(stderr, "Block of size: %u at %p\n", sizeCurr, curr);
+    curr += sizeCurr + HEADER_SIZE;
+  }
+}
+
+void printFreeList() {
+  fprintf(stderr, "***********************Free List***************************\n");
+  uvalue_t* curr = free_list;
+  while (curr != NULL) {
+    fprintf(stderr, "Block of size: %u at %p\n", header_unpack_size(*curr), curr);
+    uvalue_t next_virtual = *(curr + HEADER_SIZE);
+    curr = next_virtual == NULL ? NULL : addr_v_to_p(next_virtual);
+  }
+}
+
+
 void memory_setup(size_t total_byte_size) {
   memory_start = calloc(total_byte_size, 1);
   if (memory_start == NULL)
@@ -64,61 +85,86 @@ bool is_valid_size_block(const uvalue_t block, const uvalue_t size) {
   if (header_unpack_size(block) == size) {
     return true;
   }
-  return header_unpack_size(block) > size + HEADER_SIZE; // If splitting might be necessary
+  return header_unpack_size(block) > size + HEADER_SIZE; // Splitting is necessary
 }
 
-/**
- * Find first fit, split if necessary, and update the free list
- * @param size
- * @return pointer to the first fit or null if none is found
- */
-uvalue_t* find_free_block(const uvalue_t size) {
-  uvalue_t* current_pointer = free_list;
-  uvalue_t* previous_pointer = NULL;
-  while (current_pointer != NULL && !is_valid_size_block(*current_pointer, size)) {
-    uvalue_t next_virtual = *(current_pointer + HEADER_SIZE);
-    previous_pointer = current_pointer;
-    current_pointer = next_virtual == NULL ? NULL : addr_v_to_p(next_virtual);
+bool is_best_fit(const uvalue_t* current_best, const uvalue_t* candidate, const uvalue_t requested_size) {
+  if (candidate == NULL) {
+    return false;
   }
-  // No match found
-  if (current_pointer == NULL) {
-    //fprintf(stderr, "Free block NOT FOUND !\n");
+
+  if (current_best == NULL) {
+    return candidate != NULL && is_valid_size_block(*candidate, requested_size);
+  }
+
+  uvalue_t current_best_size = header_unpack_size(*current_best);;
+  uvalue_t new_size = header_unpack_size(*candidate);
+  return (new_size < current_best_size && is_valid_size_block(*candidate, requested_size));
+}
+
+
+/**
+ * Find best fit, split if necessary, and update the free list
+ * @param size requested block size
+ * @return pointer to the best fit or null if none is found
+ */
+uvalue_t* find_best_free_block(const uvalue_t size) {
+  if (free_list == NULL || free_list >= memory_end) {
     return NULL;
   }
 
-  const uvalue_t block_size = header_unpack_size(*current_pointer);
-  uvalue_t next_addr;
-  //fprintf(stderr, "*************FOUND*****************\n");
-  //fprintf(stderr, "Address at: %p\n", current_pointer);
-  //fprintf(stderr, "Block size of: %u\n", block_size);
-  //fprintf(stderr, "Requested: %u\n", size);
+  // Best fit pointers
+  uvalue_t* curr_best = NULL;
+  uvalue_t* prev_best = NULL;
+
+  // Pointer to traverse the free list
+  uvalue_t* prev = NULL;
+  uvalue_t* curr = free_list;
+
+  while (curr != NULL && header_unpack_size(*curr) != size) {
+    if (is_best_fit(curr_best, curr, size)) {
+      curr_best = curr;
+      prev_best = prev;
+    }
+
+    // Update pointers
+    uvalue_t next_virtual = *(curr + HEADER_SIZE);
+    prev = curr;
+    curr = next_virtual == NULL ? NULL : addr_v_to_p(next_virtual);
+  }
+
+  if (curr != NULL && header_unpack_size(*curr) == size) {
+    curr_best = curr;
+    prev_best = prev;
+  }
+
+  // No match found
+  if (curr_best == NULL) {
+    return NULL;
+  }
+
+  const uvalue_t block_size = header_unpack_size(*curr_best);
+  uvalue_t best_next_addr = *(curr_best + HEADER_SIZE);
 
   // Set next virtual address, if need to split, create the split
   if (block_size != size) {
-    uvalue_t* phy_addr = current_pointer + size + HEADER_SIZE;
-    next_addr = addr_p_to_v(phy_addr);
+    uvalue_t* phy_addr = curr_best + size + HEADER_SIZE;
     *phy_addr = header_pack(tag_None, block_size - size - HEADER_SIZE);
-
     assert((block_size - size - HEADER_SIZE) >= 1);
-
     // Update next pointer
-    *(phy_addr + HEADER_SIZE) = *(current_pointer + HEADER_SIZE);
-    //fprintf(stderr, "Splitting:\n");
-    //fprintf(stderr, "Block splitted at: %p\n", phy_addr);
-    //fprintf(stderr, "With size: %u\n", block_size - size);
-  } else {
-    next_addr = *(current_pointer + HEADER_SIZE);
+    *(phy_addr + HEADER_SIZE) = best_next_addr;
+    best_next_addr = addr_p_to_v(phy_addr);
   }
 
   // Update start of free list
-  if (previous_pointer == NULL) {
-    free_list = next_addr == NULL ? NULL : addr_v_to_p(next_addr);
+  if (prev_best == NULL) {
+    free_list = best_next_addr == NULL ? NULL : addr_v_to_p(best_next_addr);
   } else {
-    *(previous_pointer + HEADER_SIZE) = next_addr;
+    *(prev_best + HEADER_SIZE) = best_next_addr;
   }
 
-  // Remove current pointer from free_list
-  return current_pointer;
+  // Remove current pointer from free_list and return it
+  return curr_best;
 }
 
 void set_block_bitmap(const uvalue_t* block) {
@@ -185,8 +231,6 @@ void sweep() {
   assert(curr != NULL);
 
   while (curr < memory_end) {
-    //fprintf(stderr, "Curr: %p \n", curr);
-    //fprintf(stderr, "Prev: %p \n", prev);
     assert(curr >= heap_start && curr < memory_end);
     if(is_valid_block_pointer(curr) || header_unpack_tag(*curr) == tag_None) {
       uvalue_t sizeCurr = header_unpack_size(*curr);
@@ -213,7 +257,6 @@ void sweep() {
 
     // Update curr pointer
     uvalue_t size = header_unpack_size(*curr);
-    //fprintf(stderr, "Size: %u \n", size);
     curr += size + HEADER_SIZE;
   }
 }
@@ -257,37 +300,22 @@ void memory_set_heap_start(void* heap_start_ptr) {
   bitmap_allocation(heap_size);
 }
 
-void printHeap() {
-  fprintf(stderr, "***********************HEAP STATUS***************************\n");
-  uvalue_t* curr = heap_start;
-  while (curr < memory_end) {
-    uvalue_t sizeCurr = header_unpack_size(*curr);
-    fprintf(stderr, "Block of size: %u at %p\n", sizeCurr, curr);
-    curr += sizeCurr + HEADER_SIZE;
-  }
-}
-
 uvalue_t* memory_allocate(tag_t tag, uvalue_t size) {
   assert(heap_start != NULL);
 
   const uvalue_t block_size = size != 0 ? size : 1;
 
-  uvalue_t* freeBlock = find_free_block(block_size);
+  uvalue_t* freeBlock = find_best_free_block(block_size);
   if (freeBlock == NULL) {
-    //fprintf(stderr, "GcCOLLECT\n");
-    //printHeap();
-    //fprintf(stderr, "End: %p", memory_end);
     gc_collect();
-    freeBlock = find_free_block(block_size);
+    freeBlock = find_best_free_block(block_size);
     if (freeBlock == NULL) {
       fail("Mark and Sweep failed !");
     }
   }
-
   *freeBlock = header_pack(tag, block_size);
   set_block_bitmap(freeBlock);
   uvalue_t* res = freeBlock + HEADER_SIZE;
-  //fprintf(stderr, "Returned block at: %p\n", freeBlock);
 
   return res;
 }
