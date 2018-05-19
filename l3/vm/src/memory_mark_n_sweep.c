@@ -98,8 +98,6 @@ bool is_best_fit(const uvalue_t* current_best, const uvalue_t* candidate, const 
  */
 void reset_free_lists() {
   for (int i=0; i < NB_FREE_LISTS; i++) {
-    assert(free_lists[i].first == NULL || (heap_start <= free_lists[i].first && free_lists[i].first < memory_end));
-    assert(free_lists[i].last == NULL || (heap_start <= free_lists[i].last && free_lists[i].last < memory_end));
     free_lists[i].first = NULL;
     free_lists[i].last = NULL;
   }
@@ -126,14 +124,12 @@ void remove_first_from_free_list(const uvalue_t index) {
 /**
  * Add a new block at the end of the corresponding free list.
  * @param block The block that needs to be added
- * @param number The size of the block to add.
  */
-void add_to_free_list(uvalue_t* block, const uvalue_t size) {
-  size_t index = MIN(NB_FREE_LISTS-1, size-1);
+void add_to_free_list(uvalue_t* block) {
+  uvalue_t block_size = header_unpack_size(*block);
+  size_t index = MIN(NB_FREE_LISTS-1, block_size-1);
   assert(0 <= index && index < NB_FREE_LISTS);
   seg_list free_list = free_lists[index];
-  assert(free_list.first == NULL || heap_start <= free_list.first && free_list.first < memory_end);
-  assert(free_list.last == NULL || heap_start <= free_list.last && free_list.last < memory_end);
   if (free_list.last == NULL) {
     free_lists[index].last = block;
     free_lists[index].first = block;
@@ -192,7 +188,7 @@ uvalue_t* find_best_free_block(const uvalue_t size) {
     *phy_addr = header_pack(tag_None, new_size);
 
     if (new_size < NB_FREE_LISTS) {
-      add_to_free_list(phy_addr, new_size);
+      add_to_free_list(phy_addr);
     } else {
       // Update next pointer
       *(phy_addr + HEADER_SIZE) = best_next_addr;
@@ -202,8 +198,6 @@ uvalue_t* find_best_free_block(const uvalue_t size) {
 
   // Update start of free list
   if (prev_best == NULL) {
-    assert(heap_start <= free_lists[NB_FREE_LISTS-1].first && free_lists[NB_FREE_LISTS-1].first < memory_end);
-    assert(free_lists[NB_FREE_LISTS-1].last == NULL || (heap_start <= free_lists[NB_FREE_LISTS-1].last && free_lists[NB_FREE_LISTS-1].last < memory_end));
     if (best_next_addr == NULL) {
       free_lists[NB_FREE_LISTS-1].first = NULL;
       free_lists[NB_FREE_LISTS-1].last = NULL;
@@ -258,7 +252,7 @@ uvalue_t* find_free_block(const uvalue_t size) {
         uvalue_t new_size = currentSize - size - HEADER_SIZE;
         assert(new_size >= 1);
         *phy_addr = header_pack(tag_None, new_size);
-        add_to_free_list(phy_addr, new_size);
+        add_to_free_list(phy_addr);
       }
       remove_first_from_free_list(index);
       return free_block;
@@ -370,7 +364,7 @@ void sweep() {
       } else {
         if (prev != NULL) {
           // Non-consecutive blocks, we can add prev to the corresponding free list
-          add_to_free_list(prev, header_unpack_size(*prev));
+          add_to_free_list(prev);
         }
 
         prev = curr;
@@ -389,7 +383,7 @@ void sweep() {
 
   // Check if the last prev pointer wasn't merged
   if (prev != NULL && header_unpack_tag(*prev) == tag_None) {
-    add_to_free_list(prev, header_unpack_size(*prev));
+    add_to_free_list(prev);
   }
 }
 
@@ -465,7 +459,7 @@ uvalue_t* memory_allocate(tag_t tag, uvalue_t size) {
     gc_collect();
     freeBlock = find_free_block(block_size);
     if (freeBlock == NULL) {
-      fail("Mark and Sweep failed !");
+      fail("Unable to allocate block of size %u\n", size);
     }
   }
   *freeBlock = header_pack(tag, block_size);
