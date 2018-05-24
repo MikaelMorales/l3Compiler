@@ -12,7 +12,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
 #define HEADER_SIZE 1
-#define NB_FREE_LISTS 64
+#define NB_FREE_LISTS 64 // I get better performance with 64 (compared to 32), specially with test/maze.asm Input: 35 1
 
 static uvalue_t* memory_start = NULL;
 static uvalue_t* memory_end = NULL;
@@ -47,7 +47,8 @@ static tag_t header_unpack_tag(uvalue_t header) {
 }
 
 static uvalue_t header_unpack_size(uvalue_t header) {
-  return header >> 8;
+  uvalue_t size = header >> 8;
+  return size == 0 ? 1 : size; // Blocks of size 0 are actually of size 1 in reality
 }
 
 char* memory_get_identity() {
@@ -67,7 +68,8 @@ bool is_valid_size_block(const uvalue_t block, const uvalue_t size) {
   if (header_unpack_size(block) == size) {
     return true;
   }
-  return header_unpack_size(block) > size + HEADER_SIZE; // Splitting is necessary
+  // Splitting is necessary: checks that the new block has a sufficient size.
+  return header_unpack_size(block) > size + HEADER_SIZE;
 }
 
 /**
@@ -88,7 +90,7 @@ bool is_best_fit(const uvalue_t* current_best, const uvalue_t* candidate, const 
 
   uvalue_t current_best_size = header_unpack_size(*current_best);
   uvalue_t new_size = header_unpack_size(*candidate);
-  return (new_size < current_best_size && is_valid_size_block(*candidate, requested_size));
+  return new_size < current_best_size && is_valid_size_block(*candidate, requested_size);
 }
 
 /******************** Free lists management ****************************/
@@ -141,8 +143,9 @@ void add_to_free_list(uvalue_t* block) {
 }
 
 /**
- * Find the best block in the last free list containing multiple sizes.
- * It also update the free list accordingly if a block is found.
+ * Find the best block in the last free list containing blocks with variable sizes.
+ * It also updates the free list accordingly if a block is found, and if a split is
+ * needed, the split block will be added to the correct free list.
  * @param size The requested size of the block
  * @return pointer to a block of the requested size, or NULL if none exist.
  */
@@ -167,6 +170,7 @@ uvalue_t* find_best_free_block(const uvalue_t size) {
     curr = next_virtual == NULL ? NULL : addr_v_to_p(next_virtual);
   }
 
+  // In case first pointer has the exact size
   if (curr != NULL && header_unpack_size(*curr) == size) {
     curr_best = curr;
     prev_best = prev;
@@ -180,23 +184,24 @@ uvalue_t* find_best_free_block(const uvalue_t size) {
   const uvalue_t block_size = header_unpack_size(*curr_best);
   uvalue_t best_next_addr = *(curr_best + HEADER_SIZE);
 
-  // Set next virtual address, if need to split, create the split
+  // Check if split is needed
   if (block_size != size) {
     uvalue_t* phy_addr = curr_best + size + HEADER_SIZE;
     uvalue_t new_size = block_size - size - HEADER_SIZE;
     assert(new_size >= 1);
     *phy_addr = header_pack(tag_None, new_size);
 
+    // Update correct free list or update the last free list
     if (new_size < NB_FREE_LISTS) {
       add_to_free_list(phy_addr);
     } else {
-      // Update next pointer
+      // Update next pointer of the last free list
       *(phy_addr + HEADER_SIZE) = best_next_addr;
       best_next_addr = addr_p_to_v(phy_addr);
     }
   }
 
-  // Update start of free list
+  // Update start of free list if needed
   if (prev_best == NULL) {
     if (best_next_addr == NULL) {
       free_lists[NB_FREE_LISTS-1].first = NULL;
@@ -211,7 +216,7 @@ uvalue_t* find_best_free_block(const uvalue_t size) {
     *(prev_best + HEADER_SIZE) = best_next_addr;
   }
 
-  // Remove current pointer from free_list and return it
+  // Remove current pointer from last free list and return it
   return curr_best;
 }
 
@@ -226,18 +231,22 @@ uvalue_t* find_free_block(const uvalue_t size) {
   const uvalue_t initialIndex = MIN(NB_FREE_LISTS-1, size-1);
   uvalue_t index = initialIndex;
 
+  // Check if requested size is bigger than NB_FREE_LISTS
   if (index == NB_FREE_LISTS -1) {
     return find_best_free_block(size);
   }
 
+  // Check if corresponding free list contains a free block otherwise update the index
   uvalue_t* free_block = free_lists[index].first;
   if (free_block == NULL) {
+    // Otherwise a split of size 1 can happen !
     index = index + 2;
   } else {
     remove_first_from_free_list(index);
     return free_block;
   }
 
+  // Iterate over the fixed size free lists to get a block
   while (index < NB_FREE_LISTS-1) {
     free_block = free_lists[index].first;
 
@@ -246,8 +255,8 @@ uvalue_t* find_free_block(const uvalue_t size) {
     } else {
       // Free list at index contains block of size index+1
       uvalue_t currentSize = index + 1;
+      // Check if split is needed
       if (currentSize != size) {
-        // Need to split
         uvalue_t* phy_addr = free_block + size + HEADER_SIZE;
         uvalue_t new_size = currentSize - size - HEADER_SIZE;
         assert(new_size >= 1);
@@ -259,6 +268,7 @@ uvalue_t* find_free_block(const uvalue_t size) {
     }
   }
 
+  // Fallback in case no block was found
   return find_best_free_block(size);
 }
 
@@ -331,13 +341,14 @@ bool can_coalesce(const uvalue_t* b1, const uvalue_t* b2) {
  * @param root The starting point of the marking phase.
  */
 void mark(uvalue_t* root) {
+  // Get the header of the block, since user have pointers to bodies
   root = root - HEADER_SIZE;
+
   if (is_block(root)) {
     uvalue_t size = header_unpack_size(*root);
     unset_block_bitmap(root);
     for(size_t i = 1; i <= size; i++) {
       uvalue_t child = root[i];
-
       // Block addresses should be byte aligned
       if ((child & 0x03u) == 0) {
         mark(addr_v_to_p(child));
@@ -355,10 +366,12 @@ void sweep() {
 
   while (curr < memory_end) {
     assert(curr >= heap_start && curr < memory_end);
+    // Check if block can be freed
     if(is_block(curr) || header_unpack_tag(*curr) == tag_None) {
       uvalue_t sizeCurr = header_unpack_size(*curr);
-      // Coalescing
+
       if (prev != NULL && can_coalesce(prev, curr)) {
+        // Coalescing can be done, it updates the size of the block
         uvalue_t sizePrev = header_unpack_size(*prev);
         *prev = header_pack(tag_None, sizePrev + sizeCurr + HEADER_SIZE);
       } else {
@@ -371,8 +384,10 @@ void sweep() {
         *curr = header_pack(tag_None, sizeCurr); // Reset tag
         *(curr + HEADER_SIZE) = NULL; // Reset body
       }
+      // Update the bitmap, since this block is free
       unset_block_bitmap(curr);
     } else {
+      // This block is allocated and can't be freed, hence the bitmap is updated
       set_block_bitmap(curr);
     }
 
@@ -381,7 +396,7 @@ void sweep() {
     curr += size + HEADER_SIZE;
   }
 
-  // Check if the last prev pointer wasn't merged
+  // Check if the last prev pointer wasn't added to a free list
   if (prev != NULL && header_unpack_tag(*prev) == tag_None) {
     add_to_free_list(prev);
   }
@@ -462,7 +477,8 @@ uvalue_t* memory_allocate(tag_t tag, uvalue_t size) {
       fail("Unable to allocate block of size %u\n", size);
     }
   }
-  *freeBlock = header_pack(tag, block_size);
+
+  *freeBlock = header_pack(tag, size);
   set_block_bitmap(freeBlock);
   uvalue_t* res = freeBlock + HEADER_SIZE;
 
