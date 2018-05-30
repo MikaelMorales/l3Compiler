@@ -15,6 +15,7 @@ add_executable(vm
         src/fail.h
         src/main.c
         src/memory.h
+        src/mark_n_sweep.h
         src/memory_mark_n_sweep.c
         src/memory_nofree.c
         src/opcode.h

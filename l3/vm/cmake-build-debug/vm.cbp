@@ -84,63 +84,6 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/Makefile">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/README.org">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/bin/vm">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/bin/vm.dSYM/Contents/Info.plist">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/bin/vm.dSYM/Contents/Resources/DWARF/vm">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/engine.c">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/engine.h">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/fail.c">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/fail.h">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/main.c">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/memory.h">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/memory_mark_n_sweep.c">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/memory_nofree.c">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/opcode.h">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/src/vmtypes.h">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/bignums.asm">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/maze.asm">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/queens.asm">
-			<Option target="vm"/>
-		</Unit>
-		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/test/unimaze.asm">
-			<Option target="vm"/>
-		</Unit>
 		<Unit filename="/Users/Mikael/Documents/l3Compiler/l3/vm/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
